@@ -6,7 +6,7 @@ import ToastContainer from '@/Components/ToastContainer.vue';
 import NotificationBell from '@/Components/NotificationBell.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 
 const props = defineProps({
     users: Object,
@@ -210,6 +210,90 @@ watch([showCreateModal, showEditModal], ([createOpen, editOpen], [prevCreateOpen
         router.reload({ only: ['users', 'notifications'], preserveState: true, preserveScroll: true });
     }
 });
+
+// Smart pagination: only show relevant page numbers
+const getVisiblePageLinks = computed(() => {
+    if (!props.users?.links || props.users.links.length <= 3) {
+        return [];
+    }
+
+    const currentPage = props.users.current_page || 1;
+    const lastPage = props.users.last_page || 1;
+    
+    if (lastPage <= 1) return [];
+    
+    const visibleLinks = [];
+    const windowSize = 5; // Show 5 pages around current page
+    
+    // Calculate start and end page
+    let startPage = Math.max(1, currentPage - Math.floor(windowSize / 2));
+    let endPage = Math.min(lastPage, startPage + windowSize - 1);
+    
+    // Adjust if we're near the end
+    if (endPage - startPage < windowSize - 1) {
+        startPage = Math.max(1, endPage - windowSize + 1);
+    }
+
+    // Helper to build page URL using Laravel paginator's URL structure
+    const buildPageUrl = (page) => {
+        // Use the existing links structure to get proper URLs with query params
+        const existingLink = props.users.links.find(link => {
+            if (!link.url) return false;
+            const url = new URL(link.url, window.location.origin);
+            const pageParam = url.searchParams.get('page');
+            return pageParam && parseInt(pageParam) === page;
+        });
+        
+        if (existingLink && existingLink.url) {
+            return existingLink.url;
+        }
+        
+        // Fallback: build URL manually
+        const baseUrl = props.users.path || window.location.pathname;
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', page);
+        if (props.search) {
+            params.set('search', props.search);
+        }
+        return baseUrl + '?' + params.toString();
+    };
+
+    // Always show first page if not in current window
+    if (startPage > 1) {
+        visibleLinks.push({
+            label: '1',
+            url: buildPageUrl(1),
+            active: currentPage === 1
+        });
+        
+        if (startPage > 2) {
+            visibleLinks.push({ label: '...', url: null, active: false });
+        }
+    }
+
+    // Add pages in current window
+    for (let i = startPage; i <= endPage; i++) {
+        visibleLinks.push({
+            label: String(i),
+            url: buildPageUrl(i),
+            active: i === currentPage
+        });
+    }
+
+    // Always show last page if not in current window
+    if (endPage < lastPage) {
+        if (endPage < lastPage - 1) {
+            visibleLinks.push({ label: '...', url: null, active: false });
+        }
+        visibleLinks.push({
+            label: String(lastPage),
+            url: buildPageUrl(lastPage),
+            active: currentPage === lastPage
+        });
+    }
+
+    return visibleLinks;
+});
 </script>
 
 <template>
@@ -325,17 +409,64 @@ watch([showCreateModal, showEditModal], ([createOpen, editOpen], [prevCreateOpen
                             <div class="text-sm text-gray-600">
                                 Showing <span class="font-semibold text-gray-900">{{ users.from }}</span> to <span class="font-semibold text-gray-900">{{ users.to }}</span> of <span class="font-semibold text-gray-900">{{ users.total }}</span> results
                             </div>
-                            <nav class="isolate inline-flex -space-x-px rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 overflow-hidden" aria-label="Pagination">
-                                <template v-for="(link, index) in users.links" :key="index">
-                                    <Link v-if="link.url" :href="link.url" v-html="link.label"
+                            <nav class="flex items-center gap-2" aria-label="Pagination">
+                                <!-- Previous Page -->
+                                <Link 
+                                    v-if="users.links[0]?.url"
+                                    :href="users.links[0].url"
+                                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-150"
+                                    title="Previous page"
+                                >
+                                    <i class="fas fa-chevron-left text-xs mr-1"></i>
+                                    <span class="hidden sm:inline">Previous</span>
+                                </Link>
+                                <span 
+                                    v-else
+                                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed"
+                                >
+                                    <i class="fas fa-chevron-left text-xs mr-1"></i>
+                                    <span class="hidden sm:inline">Previous</span>
+                                </span>
+
+                                <!-- Page Numbers (smart display) -->
+                                <template v-for="(link, index) in getVisiblePageLinks" :key="index">
+                                    <Link 
+                                        v-if="link.url && link.label !== '...'"
+                                        :href="link.url"
                                         :class="[
-                                            'relative inline-flex items-center px-4 py-2 text-sm font-medium transition-all duration-150 focus:z-20',
+                                            'inline-flex items-center justify-center min-w-[2.5rem] px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150',
                                             link.active 
-                                                ? 'z-10 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md' 
-                                                : 'text-gray-700 hover:bg-gray-50 bg-white'
-                                        ]" />
-                                    <span v-else v-html="link.label" class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-50"></span>
+                                                ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md' 
+                                                : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                                        ]"
+                                    >
+                                        {{ link.label }}
+                                    </Link>
+                                    <span 
+                                        v-else-if="link.label === '...'"
+                                        class="inline-flex items-center justify-center px-2 py-2 text-sm font-medium text-gray-500"
+                                    >
+                                        ...
+                                    </span>
                                 </template>
+
+                                <!-- Next Page -->
+                                <Link 
+                                    v-if="users.links[users.links.length - 1]?.url"
+                                    :href="users.links[users.links.length - 1].url"
+                                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-150"
+                                    title="Next page"
+                                >
+                                    <span class="hidden sm:inline">Next</span>
+                                    <i class="fas fa-chevron-right text-xs ml-1"></i>
+                                </Link>
+                                <span 
+                                    v-else
+                                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed"
+                                >
+                                    <span class="hidden sm:inline">Next</span>
+                                    <i class="fas fa-chevron-right text-xs ml-1"></i>
+                                </span>
                             </nav>
                         </div>
                     </div>
