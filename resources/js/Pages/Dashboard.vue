@@ -216,13 +216,6 @@ watch([showCreateModal, showEditModal], ([createOpen, editOpen], [prevCreateOpen
     <Head title="Users Dashboard" />
 
     <AuthenticatedLayout>
-        <template #header>
-            <div class="flex items-center gap-3">
-                <h2 class="text-lg font-semibold text-gray-900">
-                    Users Dashboard
-                </h2>
-            </div>
-        </template>
         
         <template #right>
             <NotificationBell :notifications="notifications" />
