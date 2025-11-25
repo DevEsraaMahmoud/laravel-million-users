@@ -1,5 +1,8 @@
 # Laravel Assessment – Advanced Level (Nina.care)
 
+![Dashboard](screenshots/1.png)
+
+
 A comprehensive Laravel application built with Inertia.js and Vue.js for managing users with advanced search capabilities and real-time notifications.
 
 ## 🚀 Main Features
