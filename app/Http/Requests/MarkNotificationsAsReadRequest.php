@@ -22,7 +22,7 @@ class MarkNotificationsAsReadRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'notification_ids' => 'required|array',
+            'notification_ids' => 'present|array',
             'notification_ids.*' => 'exists:user_activity_notifications,id',
         ];
     }
@@ -35,7 +35,7 @@ class MarkNotificationsAsReadRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'notification_ids.required' => 'The notification IDs field is required.',
+            'notification_ids.present' => 'The notification IDs field must be present.',
             'notification_ids.array' => 'The notification IDs must be an array.',
             'notification_ids.*.exists' => 'One or more notification IDs are invalid.',
         ];
