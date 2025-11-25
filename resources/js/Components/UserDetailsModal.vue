@@ -252,13 +252,6 @@ const confirmDelete = () => {
                         <i class="fas fa-edit"></i>
                         Edit User
                     </button>
-                    <button
-                        @click="openDeleteConfirmation"
-                        class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-red-700 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-500/30 hover:shadow-red-600/40 hover:from-red-700 hover:to-red-800 transition-all duration-200"
-                    >
-                        <i class="fas fa-trash"></i>
-                        Delete User
-                    </button>
 
                     <button
                         @click="close"

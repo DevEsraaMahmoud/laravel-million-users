@@ -24,7 +24,7 @@ class UserController extends Controller
     public function index(Request $request) // remove Response type to avoid mismatch
     {
         $query = (string) $request->get('search', '');
-        $perPage = max(10, min((int) $request->get('per_page', 15), 50)); // safe bounds
+        $perPage = max(10, min((int) $request->get('per_page', 10), 20)); // safe bounds
 
         // Cache key short TTL to hide spikes while debugging (optional)
         $cacheKey = 'users:list:'.md5($query).':per:'.$perPage.':page:'.request()->get('page', 1);
