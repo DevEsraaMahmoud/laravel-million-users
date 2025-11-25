@@ -45,10 +45,10 @@ const submit = () => {
                     <div class="p-6 text-gray-900">
                         <div class="mb-6">
                             <Link
-                                :href="route('users.show', user.id)"
+                                :href="route('users.index')"
                                 class="text-indigo-600 hover:text-indigo-900"
                             >
-                                ← Back to User Details
+                                ← Back to Users Dashboard
                             </Link>
                         </div>
 
@@ -109,7 +109,7 @@ const submit = () => {
                                         </p>
                                     </div>
 
-                                    <div class="md:col-span-2">
+                                    <div class="md:col-span-1">
                                         <label
                                             for="email"
                                             class="block text-sm font-medium text-gray-700"
@@ -246,12 +246,7 @@ const submit = () => {
 
                             <!-- Form Actions -->
                             <div class="flex items-center justify-end gap-4">
-                                <Link
-                                    :href="route('users.show', user.id)"
-                                    class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-                                >
-                                    Cancel
-                                </Link>
+                                
                                 <button
                                     type="submit"
                                     :disabled="form.processing"
@@ -259,6 +254,13 @@ const submit = () => {
                                 >
                                     Update User
                                 </button>
+
+                                <Link
+                                    :href="route('users.index')"
+                                    class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </Link>
                             </div>
                         </form>
                     </div>

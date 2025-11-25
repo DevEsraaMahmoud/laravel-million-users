@@ -133,12 +133,6 @@ const closeModal = () => {
                 </h2>
                 <div class="flex items-center gap-4">
                     <NotificationBell :notifications="notifications" />
-                    <Link
-                        :href="route('users.create')"
-                        class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                    >
-                        Add New User
-                    </Link>
                 </div>
             </div>
         </template>
@@ -154,7 +148,7 @@ const closeModal = () => {
                                 <input
                                     v-model="searchQuery"
                                     type="text"
-                                    placeholder="Search by name or email... (Press Enter to search immediately)"
+                                    placeholder="Search by name or email..."
                                     :disabled="isSearching"
                                     :readonly="isSearching"
                                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm md:text-base py-2.5 px-4 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
@@ -186,6 +180,15 @@ const closeModal = () => {
                                     </svg>
                                 </div>
                             </div>
+
+                            <div class="flex items-center gap-4 ml-auto">
+                    <Link
+                        :href="route('users.create')"
+                        class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                    >
+                        Add New User
+                    </Link>
+                </div>
                         </div>
                     </div>
 

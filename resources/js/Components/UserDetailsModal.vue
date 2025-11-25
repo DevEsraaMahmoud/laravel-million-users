@@ -124,14 +124,6 @@ const confirmDelete = () => {
                                     {{ userData.email }}
                                 </dd>
                             </div>
-                            <div>
-                                <dt class="text-sm font-medium text-gray-500">
-                                    User ID
-                                </dt>
-                                <dd class="mt-1 text-sm text-gray-900">
-                                    {{ userData.id }}
-                                </dd>
-                            </div>
                         </dl>
                     </div>
 
@@ -188,12 +180,7 @@ const confirmDelete = () => {
 
                 <!-- Actions -->
                 <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
-                    <button
-                        @click="close"
-                        class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-                    >
-                        Close
-                    </button>
+                  
                     <Link
                         :href="route('users.edit', userData.id)"
                         class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500"
@@ -206,6 +193,13 @@ const confirmDelete = () => {
                         class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-500"
                     >
                         Delete User
+                    </button>
+
+                    <button
+                        @click="close"
+                        class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+                    >
+                        Close
                     </button>
                 </div>
             </div>
