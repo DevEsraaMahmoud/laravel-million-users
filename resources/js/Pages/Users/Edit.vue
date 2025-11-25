@@ -32,30 +32,36 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                Edit User
-            </h2>
+            <div class="flex items-center gap-3">
+                <h2 class="text-lg font-semibold text-gray-900">
+                    Edit User
+                </h2>
+            </div>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div class="py-8">
+            <div class="mx-auto max-w-4xl sm:px-6 lg:px-8">
                 <div
-                    class="overflow-hidden bg-white shadow-sm sm:rounded-lg"
+                    class="overflow-hidden bg-white/80 backdrop-blur-sm shadow-xl shadow-gray-200/50 sm:rounded-2xl border border-gray-200/50"
                 >
-                    <div class="p-6 text-gray-900">
-                        <div class="mb-6">
+                    <div class="p-8 text-gray-900">
+                        <div class="mb-8">
                             <Link
                                 :href="route('users.index')"
-                                class="text-indigo-600 hover:text-indigo-900"
+                                class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
                             >
-                                ← Back to Users Dashboard
+                                <i class="fas fa-arrow-left"></i>
+                                Back to Users Dashboard
                             </Link>
                         </div>
 
                         <form @submit.prevent="submit">
                             <!-- User Information -->
-                            <div class="mb-6">
-                                <h3 class="mb-4 text-lg font-semibold text-gray-900">
+                            <div class="mb-8">
+                                <h3 class="mb-6 text-lg font-bold text-gray-900 flex items-center gap-2">
+                                    <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-700 text-white">
+                                        <i class="fas fa-user text-sm"></i>
+                                    </div>
                                     User Information
                                 </h3>
                                 <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -71,9 +77,9 @@ const submit = () => {
                                             v-model="form.first_name"
                                             type="text"
                                             required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                            class="mt-2 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
                                             :class="{
-                                                'border-red-500': form.errors.first_name,
+                                                'border-red-500 focus:border-red-500 focus:ring-red-500/20': form.errors.first_name,
                                             }"
                                         />
                                         <p
@@ -96,9 +102,9 @@ const submit = () => {
                                             v-model="form.last_name"
                                             type="text"
                                             required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                            class="mt-2 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
                                             :class="{
-                                                'border-red-500': form.errors.last_name,
+                                                'border-red-500 focus:border-red-500 focus:ring-red-500/20': form.errors.last_name,
                                             }"
                                         />
                                         <p
@@ -121,9 +127,9 @@ const submit = () => {
                                             v-model="form.email"
                                             type="email"
                                             required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                            class="mt-2 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
                                             :class="{
-                                                'border-red-500': form.errors.email,
+                                                'border-red-500 focus:border-red-500 focus:ring-red-500/20': form.errors.email,
                                             }"
                                         />
                                         <p
@@ -137,8 +143,11 @@ const submit = () => {
                             </div>
 
                             <!-- Address Information -->
-                            <div class="mb-6">
-                                <h3 class="mb-4 text-lg font-semibold text-gray-900">
+                            <div class="mb-8">
+                                <h3 class="mb-6 text-lg font-bold text-gray-900 flex items-center gap-2">
+                                    <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-700 text-white">
+                                        <i class="fas fa-map-marker-alt text-sm"></i>
+                                    </div>
                                     Address Information
                                 </h3>
                                 <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -154,9 +163,9 @@ const submit = () => {
                                             v-model="form.address.street"
                                             type="text"
                                             required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                            class="mt-2 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
                                             :class="{
-                                                'border-red-500': form.errors['address.street'],
+                                                'border-red-500 focus:border-red-500 focus:ring-red-500/20': form.errors['address.street'],
                                             }"
                                         />
                                         <p
@@ -179,9 +188,9 @@ const submit = () => {
                                             v-model="form.address.city"
                                             type="text"
                                             required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                            class="mt-2 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
                                             :class="{
-                                                'border-red-500': form.errors['address.city'],
+                                                'border-red-500 focus:border-red-500 focus:ring-red-500/20': form.errors['address.city'],
                                             }"
                                         />
                                         <p
@@ -204,9 +213,9 @@ const submit = () => {
                                             v-model="form.address.post_code"
                                             type="text"
                                             required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                            class="mt-2 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
                                             :class="{
-                                                'border-red-500': form.errors['address.post_code'],
+                                                'border-red-500 focus:border-red-500 focus:ring-red-500/20': form.errors['address.post_code'],
                                             }"
                                         />
                                         <p
@@ -229,9 +238,9 @@ const submit = () => {
                                             v-model="form.address.country"
                                             type="text"
                                             required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                            class="mt-2 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
                                             :class="{
-                                                'border-red-500': form.errors['address.country'],
+                                                'border-red-500 focus:border-red-500 focus:ring-red-500/20': form.errors['address.country'],
                                             }"
                                         />
                                         <p
@@ -245,22 +254,23 @@ const submit = () => {
                             </div>
 
                             <!-- Form Actions -->
-                            <div class="flex items-center justify-end gap-4">
-                                
+                            <div class="flex items-center justify-end gap-4 pt-6 border-t border-gray-200/50">
+                                <Link
+                                    :href="route('users.index')"
+                                    class="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition-all duration-200"
+                                >
+                                    <i class="fas fa-times"></i>
+                                    Cancel
+                                </Link>
                                 <button
                                     type="submit"
                                     :disabled="form.processing"
-                                    class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+                                    class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-600/40 hover:from-indigo-700 hover:to-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                                 >
-                                    Update User
+                                    <i v-if="form.processing" class="fas fa-spinner fa-spin"></i>
+                                    <i v-else class="fas fa-save"></i>
+                                    {{ form.processing ? 'Updating...' : 'Update User' }}
                                 </button>
-
-                                <Link
-                                    :href="route('users.index')"
-                                    class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-                                >
-                                    Cancel
-                                </Link>
                             </div>
                         </form>
                     </div>

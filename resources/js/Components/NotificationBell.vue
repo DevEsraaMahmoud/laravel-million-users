@@ -2,7 +2,6 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import Dropdown from './Dropdown.vue';
-import ToastContainer from './ToastContainer.vue';
 
 const props = defineProps({
     notifications: {
@@ -13,30 +12,13 @@ const props = defineProps({
 
 const emit = defineEmits(['update:notifications']);
 
-// Local notifications state for polling
+// Local notifications state
 const localNotifications = ref([...props.notifications]);
 
-const toasts = ref([]);
 const shownNotificationIds = ref(new Set());
 const isUpdating = ref(false); // Flag to prevent loops during updates
 const previousNotificationIds = ref(new Set()); // Track previous state
 const unreadCount = computed(() => localNotifications.value.length);
-
-// No polling - notifications are only fetched on page load/refresh
-
-const addToast = (message, type = 'info', id = null) => {
-    const toast = {
-        id: id || Date.now(),
-        message,
-        type,
-        duration: 5000, // Longer duration for notifications
-    };
-    toasts.value.push(toast);
-};
-
-const removeToast = (index) => {
-    toasts.value.splice(index, 1);
-};
 
 // Format time ago
 const timeAgo = (date) => {
@@ -196,29 +178,7 @@ const markAllAsRead = async () => {
     }
 };
 
-// Show new notifications as toasts
-const showNewNotifications = () => {
-    // Don't show toasts if we're updating (marking as read/dismissing)
-    if (isUpdating.value) return;
-    
-    const currentIds = new Set(localNotifications.value.map(n => n.id));
-    
-    // Find truly new notifications (exist now but didn't exist before)
-    localNotifications.value.forEach((notification) => {
-        const isNew = !previousNotificationIds.value.has(notification.id);
-        const notShown = !shownNotificationIds.value.has(notification.id);
-        const isUnread = !notification.read;
-        
-        // Only show if it's a new notification, not shown before, and unread
-        if (isNew && notShown && isUnread) {
-            addToast(notification.message, 'info', notification.id);
-            shownNotificationIds.value.add(notification.id);
-        }
-    });
-    
-    // Update previous IDs
-    previousNotificationIds.value = currentIds;
-};
+// Notifications are only shown in the dropdown, not as toasts
 
 // No polling - notifications are fetched only on page load/refresh
 
@@ -230,12 +190,7 @@ onMounted(() => {
     });
     localNotifications.value = [...props.notifications];
     
-    // Show toasts for initial notifications
-    props.notifications.forEach((notification) => {
-        if (!notification.read) {
-            addToast(notification.message, 'info', notification.id);
-        }
-    });
+    // Don't show toasts automatically - notifications only visible in dropdown
 });
 
 // Watch for prop changes and update local state (when page refreshes or user actions update notifications)
@@ -256,34 +211,22 @@ watch(
 </script>
 
 <template>
-    <div class="relative">
+    <div class="relative z-[10000]">
         <Dropdown align="right" width="96">
             <template #trigger>
                 <button
                     type="button"
-                    class="relative rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    class="relative rounded-full bg-white p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 transition-all duration-200 border-0"
                 >
                     <span class="sr-only">View notifications</span>
-                    <svg
-                        class="h-6 w-6"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="1.5"
-                        stroke="currentColor"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
-                        />
-                    </svg>
+                    <i class="fas fa-bell text-lg"></i>
                     <span
                         v-if="unreadCount > 0"
-                        class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"
+                        class="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"
                     />
                     <span
                         v-if="unreadCount > 0"
-                        class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white"
+                        class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-red-600 text-xs font-bold text-white shadow-lg"
                     >
                         {{ unreadCount > 9 ? '9+' : unreadCount }}
                     </span>
@@ -291,41 +234,46 @@ watch(
             </template>
 
             <template #content>
-                <div class="w-96 max-h-96 overflow-y-auto">
+                <div class="w-96 max-h-96 overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200/50">
                     <!-- Header -->
-                    <div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-                        <h3 class="text-sm font-semibold text-gray-900">
+                    <div class="flex items-center justify-between border-b border-gray-200/50 bg-gradient-to-r from-gray-50 to-white px-5 py-4">
+                        <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
+                            <i class="fas fa-bell text-indigo-600"></i>
                             Notifications
                         </h3>
                         <button
                             v-if="unreadCount > 0"
                             @click.stop="markAllAsRead"
-                            class="text-xs text-indigo-600 hover:text-indigo-900 font-medium"
+                            class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold transition-colors flex items-center gap-1"
                         >
+                            <i class="fas fa-check-double"></i>
                             Mark all as read
                         </button>
                     </div>
 
                     <!-- Notifications List -->
-                    <div v-if="localNotifications.length > 0" class="divide-y divide-gray-200">
+                    <div v-if="localNotifications.length > 0" class="divide-y divide-gray-200/50">
                         <div
                             v-for="notification in localNotifications"
                             :key="notification.id"
-                            class="px-4 py-3 hover:bg-gray-50 transition-colors"
+                            class="px-5 py-4 hover:bg-indigo-50/30 transition-colors"
                             :class="{
-                                'bg-blue-50': !notification.read,
+                                'bg-gradient-to-r from-indigo-50/50 to-white': !notification.read,
                             }"
                         >
                             <div class="flex items-start justify-between gap-3">
                                 <div class="flex-1 min-w-0">
-                                    <div class="flex items-start gap-2">
-                                        <span
+                                    <div class="flex items-start gap-3">
+                                        <div
                                             v-if="!notification.read"
-                                            class="mt-1.5 h-2 w-2 rounded-full bg-indigo-600 flex-shrink-0"
-                                        />
-                                        <div class="flex-1">
+                                            class="mt-1.5 flex-shrink-0"
+                                        >
+                                            <div class="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-indigo-600 to-indigo-700"></div>
+                                        </div>
+                                        <div v-else class="mt-1.5 flex-shrink-0 w-2.5"></div>
+                                        <div class="flex-1 min-w-0">
                                             <p
-                                                class="text-sm"
+                                                class="text-sm leading-relaxed"
                                                 :class="{
                                                     'font-semibold text-gray-900': !notification.read,
                                                     'text-gray-700': notification.read,
@@ -333,50 +281,20 @@ watch(
                                             >
                                                 {{ notification.message }}
                                             </p>
-                                            <p class="mt-1 text-xs text-gray-500">
+                                            <p class="mt-2 text-xs text-gray-500 flex items-center gap-1">
+                                                <i class="fas fa-clock text-gray-400"></i>
                                                 {{ timeAgo(notification.created_at) }}
                                             </p>
                                         </div>
                                     </div>
                                 </div>
-                                    <div class="ml-4 flex items-center gap-2">
+                                <div class="ml-4 flex items-center gap-1.5">
                                     <button
                                         @click.stop="markAsRead(notification.id)"
-                                        class="p-1 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded"
+                                        class="p-2 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-100 rounded-lg transition-all duration-200"
                                         title="Mark as read"
                                     >
-                                        <svg
-                                            class="h-4 w-4"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke-width="2"
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                            />
-                                        </svg>
-                                    </button>
-                                    <button
-                                        @click.stop="dismissNotification(notification.id)"
-                                        class="p-1 text-red-600 hover:text-red-900 hover:bg-red-50 rounded"
-                                        title="Dismiss"
-                                    >
-                                        <svg
-                                            class="h-4 w-4"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke-width="2"
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                d="M6 18L18 6M6 6l12 12"
-                                            />
-                                        </svg>
+                                        <i class="fas fa-check text-sm"></i>
                                     </button>
                                 </div>
                             </div>
@@ -388,31 +306,15 @@ watch(
                         v-else
                         class="px-4 py-8 text-center"
                     >
-                        <svg
-                            class="mx-auto h-12 w-12 text-gray-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                            />
-                        </svg>
-                        <p class="mt-2 text-sm text-gray-500">
-                            No new notifications
-                        </p>
+                        <div class="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mx-auto mb-3">
+                            <i class="fas fa-bell-slash text-2xl text-gray-400"></i>
+                        </div>
+                        <p class="text-sm font-medium text-gray-900">No new notifications</p>
+                        <p class="mt-1 text-xs text-gray-500">You're all caught up!</p>
                     </div>
                 </div>
             </template>
         </Dropdown>
-
-        <!-- Toast Notifications (rendered at root level) -->
-        <Teleport to="body">
-            <ToastContainer :toasts="toasts" @remove="removeToast" />
-        </Teleport>
     </div>
 </template>
 

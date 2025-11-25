@@ -30,8 +30,20 @@ class UserSeeder extends Seeder
         // Pre-generate common names to reduce Faker memory usage
         $firstNames = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Emily', 'James', 'Jessica', 'Robert', 'Ashley', 'William', 'Amanda', 'Richard', 'Melissa', 'Joseph', 'Deborah', 'Thomas', 'Michelle', 'Christopher', 'Laura'];
         $lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee'];
-        $countries = ['United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France', 'Italy', 'Spain', 'Netherlands', 'Belgium'];
-        $cities = ['New York', 'London', 'Toronto', 'Sydney', 'Berlin', 'Paris', 'Rome', 'Madrid', 'Amsterdam', 'Brussels'];
+        
+        // Countries and Cities data structure (matching UserFormModal)
+        $countriesWithCities = [
+            'United States' => ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'],
+            'United Kingdom' => ['London', 'Manchester', 'Birmingham', 'Liverpool', 'Leeds'],
+            'Canada' => ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Edmonton', 'Ottawa', 'Winnipeg', 'Quebec City', 'Hamilton', 'Kitchener'],
+            'Australia' => ['Sydney', 'Melbourne', 'Brisbane', 'Perth'],
+            'Germany' => ['Berlin', 'Munich', 'Hamburg', 'Frankfurt', 'Cologne'],
+            'France' => ['Paris', 'Lyon', 'Marseille', 'Toulouse', 'Nice'],
+            'Italy' => ['Rome', 'Milan', 'Naples', 'Turin', 'Palermo'],
+            'Spain' => ['Madrid', 'Barcelona', 'Valencia', 'Seville', 'Zaragoza'],
+            'Netherlands' => ['Amsterdam', 'Rotterdam', 'The Hague', 'Utrecht', 'Eindhoven'],
+            'Belgium' => ['Brussels', 'Antwerp', 'Ghent', 'Charleroi', 'Liège'],
+        ];
 
         for ($i = 0; $i < $totalUsers; $i += $chunkSize) {
             // Create new Faker instance for each chunk to prevent memory buildup
@@ -73,11 +85,16 @@ class UserSeeder extends Seeder
 
             // Prepare addresses
             foreach ($insertedIds as $userId) {
+                // Select a random country
+                $country = array_rand($countriesWithCities);
+                // Select a random city from that country
+                $city = $countriesWithCities[$country][array_rand($countriesWithCities[$country])];
+                
                 $addresses[] = [
                     'user_id'    => $userId,
-                    'country'    => $countries[array_rand($countries)],
-                    'city'       => $cities[array_rand($cities)],
-                    'post_code'  => $faker->postcode(),
+                    'country'    => $country,
+                    'city'       => $city,
+                    'post_code'  => $faker->numberBetween(10000, 99999), // Numeric post code
                     'street'     => $faker->streetAddress(),
                     'created_at' => $now,
                     'updated_at' => $now,

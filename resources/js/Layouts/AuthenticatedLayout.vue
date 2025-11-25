@@ -1,6 +1,5 @@
 <script setup>
 import { ref } from 'vue';
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Link } from '@inertiajs/vue3';
@@ -10,76 +9,60 @@ const showingNavigationDropdown = ref(false);
 
 <template>
     <div>
-        <div class="min-h-screen bg-gray-100">
-            <nav
-                class="border-b border-gray-100 bg-white"
-            >
+        <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+            <nav class="bg-white/80 backdrop-blur-lg border-b border-gray-200/50 shadow-sm relative z-50">
                 <!-- Primary Navigation Menu -->
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="flex h-16 justify-between">
-                        <div class="flex">
-                            <!-- Logo -->
+                    <div class="flex h-20 justify-between items-center">
+                        <div class="flex items-center flex-1">
+                            <!-- Logo/Brand -->
                             <div class="flex shrink-0 items-center">
-                                <Link :href="route('dashboard')">
-                                    <ApplicationLogo
-                                        class="block h-9 w-auto fill-current text-gray-800"
-                                    />
+                                <Link :href="route('dashboard')" class="flex items-center gap-3 group">
+                                    <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-500/50 group-hover:shadow-indigo-600/50 transition-all duration-300 group-hover:scale-105">
+                                        <i class="fas fa-users text-lg"></i>
+                                    </div>
+                                    <div class="hidden sm:block">
+                                        <h1 class="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                                            User Management
+                                        </h1>
+                                    </div>
                                 </Link>
                             </div>
 
                             <!-- Navigation Links -->
-                            <div
-                                class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
-                            >
+                            <div class="hidden space-x-1 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink
                                     :href="route('dashboard')"
                                     :active="route().current('dashboard')"
                                 >
+                                    <i class="fas fa-th-large mr-2"></i>
                                     Dashboard
                                 </NavLink>
                             </div>
+
+                            <!-- Page Title (from header slot) -->
+                            <div v-if="$slots.header" class="hidden md:flex items-center ml-10 pl-10 border-l border-gray-200">
+                                <slot name="header" />
+                            </div>
                         </div>
 
-
-                        <!-- Hamburger -->
-                        <div class="-me-2 flex items-center sm:hidden">
-                            <button
-                                @click="
-                                    showingNavigationDropdown =
-                                        !showingNavigationDropdown
-                                "
-                                class="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"
-                            >
-                                <svg
-                                    class="h-6 w-6"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
+                        <!-- Right side actions -->
+                        <div class="flex items-center gap-4">
+                            <!-- Right side slot for actions like notification bell -->
+                            <slot name="right" />
+                            
+                            <!-- Mobile hamburger -->
+                            <div class="flex items-center sm:hidden">
+                                <button
+                                    @click="showingNavigationDropdown = !showingNavigationDropdown"
+                                    class="inline-flex items-center justify-center rounded-lg p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 >
-                                    <path
-                                        :class="{
-                                            hidden: showingNavigationDropdown,
-                                            'inline-flex':
-                                                !showingNavigationDropdown,
-                                        }"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        :class="{
-                                            hidden: !showingNavigationDropdown,
-                                            'inline-flex':
-                                                showingNavigationDropdown,
-                                        }"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
+                                    <i 
+                                        :class="showingNavigationDropdown ? 'fas fa-times' : 'fas fa-bars'"
+                                        class="h-6 w-6"
+                                    ></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -90,29 +73,20 @@ const showingNavigationDropdown = ref(false);
                         block: showingNavigationDropdown,
                         hidden: !showingNavigationDropdown,
                     }"
-                    class="sm:hidden"
+                    class="sm:hidden border-t border-gray-200/50 bg-white/95 backdrop-blur-sm"
                 >
-                    <div class="space-y-1 pb-3 pt-2">
+                    <div class="space-y-1 px-4 pb-4 pt-3">
                         <ResponsiveNavLink
                             :href="route('dashboard')"
                             :active="route().current('dashboard')"
                         >
+                            <i class="fas fa-th-large mr-2"></i>
                             Dashboard
                         </ResponsiveNavLink>
                     </div>
-
                 </div>
             </nav>
 
-            <!-- Page Heading -->
-            <header
-                class="bg-white shadow"
-                v-if="$slots.header"
-            >
-                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                    <slot name="header" />
-                </div>
-            </header>
 
             <!-- Page Content -->
             <main>

@@ -27,7 +27,7 @@ class StoreUserRequest extends FormRequest
             'email' => 'required|string|email|max:191|unique:users',
             'address.country' => 'required|string|max:100',
             'address.city' => 'required|string|max:100',
-            'address.post_code' => 'required|string|max:20',
+            'address.post_code' => 'required|numeric|max:999999999',
             'address.street' => 'required|string|max:255',
         ];
     }
@@ -48,6 +48,7 @@ class StoreUserRequest extends FormRequest
             'address.country.required' => 'The country field is required.',
             'address.city.required' => 'The city field is required.',
             'address.post_code.required' => 'The post code field is required.',
+            'address.post_code.numeric' => 'The post code must be a number.',
             'address.street.required' => 'The street field is required.',
         ];
     }

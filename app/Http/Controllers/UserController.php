@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Cache;
 
 class UserController extends Controller
 {
@@ -20,24 +21,27 @@ class UserController extends Controller
     ) {
     }
 
-    /**
-     * Display the dashboard with user search.
-     */
-    public function index(Request $request): Response
+    public function index(Request $request) // remove Response type to avoid mismatch
     {
-        $query = $request->get('search', '');
-        $perPage = (int) $request->get('per_page', 15);
+        $query = (string) $request->get('search', '');
+        $perPage = max(10, min((int) $request->get('per_page', 15), 50)); // safe bounds
 
-        $users = $this->userSearchService->paginated($query, $perPage);
-        
-        $notifications = Notification::with('user')
+        // Cache key short TTL to hide spikes while debugging (optional)
+        $cacheKey = 'users:list:'.md5($query).':per:'.$perPage.':page:'.request()->get('page', 1);
+
+        $users = Cache::remember($cacheKey, 20, function () use ($query, $perPage) {
+            return $this->userSearchService->paginated($query, $perPage);
+        });
+
+        $notifications = Notification::select('id','user_id','type','message','read','created_at')
             ->where('read', false)
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
+            ->orderByDesc('created_at')
+            ->limit(6)
             ->get();
-        
+
+        // withQueryString keeps search/per_page in paginator urls
         return Inertia::render('Dashboard', [
-            'users' => $users,
+            'users' => $users->withQueryString(),
             'search' => $query,
             'notifications' => $notifications,
         ]);
