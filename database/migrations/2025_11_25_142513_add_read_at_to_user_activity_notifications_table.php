@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('user_activity_notifications', function (Blueprint $table) {
-            $table->timestamp('read_at')->nullable()->after('read');
-        });
+        // Check if column already exists (it's already in the create_notifications_table migration)
+        if (!Schema::hasColumn('user_activity_notifications', 'read_at')) {
+            Schema::table('user_activity_notifications', function (Blueprint $table) {
+                $table->timestamp('read_at')->nullable()->after('read');
+            });
+        }
     }
 
     /**
