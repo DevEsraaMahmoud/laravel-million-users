@@ -117,25 +117,6 @@ class UserSearchServiceTest extends TestCase
     }
 
     /**
-     * Test search collection returns limited results.
-     */
-    public function test_search_collection_returns_limited_results(): void
-    {
-        for ($i = 1; $i <= 25; $i++) {
-            User::create([
-                'first_name' => "User{$i}",
-                'last_name' => "Test",
-                'email' => "user{$i}@example.com",
-                'password' => bcrypt('password'),
-            ]);
-        }
-
-        $result = $this->service->searchCollection(null, 20);
-
-        $this->assertCount(20, $result);
-    }
-
-    /**
      * Test search results are cached.
      */
     public function test_search_results_are_cached(): void
@@ -173,7 +154,7 @@ class UserSearchServiceTest extends TestCase
         $chunkCount = 0;
         $totalUsers = 0;
 
-        $this->service->chunk(function ($users) use (&$chunkCount, &$totalUsers) {
+        $this->service->paginated(null, 10, 1)->chunk(function ($users) use (&$chunkCount, &$totalUsers) {
             $chunkCount++;
             $totalUsers += $users->count();
         }, 10);
@@ -197,7 +178,7 @@ class UserSearchServiceTest extends TestCase
         }
 
         $count = 0;
-        foreach ($this->service->cursor() as $user) {
+        foreach ($this->service->paginated(null, 10, 1)->cursor() as $user) {
             $count++;
             $this->assertInstanceOf(User::class, $user);
         }

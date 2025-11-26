@@ -2,49 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\UserUpdated;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
-use App\Models\Notification;
 use App\Models\User;
-use App\Services\UserSearchService;
+use App\Repositories\UserRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Support\Facades\Cache;
 
 class UserController extends Controller
 {
     public function __construct(
-        protected UserSearchService $userSearchService
+        protected UserRepository $userRepository
     ) {
     }
 
-    public function index(Request $request) // remove Response type to avoid mismatch
+    public function index(Request $request)
     {
-        $query = (string) $request->get('search', '');
-        $perPage = max(10, min((int) $request->get('per_page', 10), 20)); // safe bounds
-
-        // Cache key short TTL to hide spikes while debugging (optional)
-        $cacheKey = 'users:list:'.md5($query).':per:'.$perPage.':page:'.request()->get('page', 1);
-
-        $users = Cache::remember($cacheKey, 20, function () use ($query, $perPage) {
-            return $this->userSearchService->paginated($query, $perPage);
-        });
+        $data = $this->userRepository->getIndexData($request);
         
-        $notifications = Notification::select('id','user_id','type','message','read','created_at')
-            ->where('read', false)
-            ->orderByDesc('created_at')
-            ->limit(6)
-            ->get();
-        
-        // withQueryString keeps search/per_page in paginator urls
-        return Inertia::render('Dashboard', [
-            'users' => $users->withQueryString(),
-            'search' => $query,
-            'notifications' => $notifications,
-        ]);
+        return Inertia::render('Dashboard', $data);
     }
 
     /**
@@ -60,20 +38,7 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request)
     {
-        $validated = $request->validated();
-
-        $user = User::create([
-            'first_name' => $validated['first_name'],
-            'last_name' => $validated['last_name'],
-            'email' => $validated['email'],
-        ]);
-
-        $user->address()->create([
-            'country' => $validated['address']['country'],
-            'city' => $validated['address']['city'],
-            'post_code' => $validated['address']['post_code'],
-            'street' => $validated['address']['street'],
-        ]);
+        $this->userRepository->createFromRequest($request);
 
         return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
@@ -113,31 +78,7 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, User $user)
     {
-        $validated = $request->validated();
-
-        $user->update([
-            'first_name' => $validated['first_name'],
-            'last_name' => $validated['last_name'],
-            'email' => $validated['email'],
-        ]);
-
-        if ($user->address) {
-            $user->address->update([
-                'country' => $validated['address']['country'],
-                'city' => $validated['address']['city'],
-                'post_code' => $validated['address']['post_code'],
-                'street' => $validated['address']['street'],
-            ]);
-        } else {
-            $user->address()->create([
-                'country' => $validated['address']['country'],
-                'city' => $validated['address']['city'],
-                'post_code' => $validated['address']['post_code'],
-                'street' => $validated['address']['street'],
-            ]);
-        }
-
-        event(new UserUpdated($user));
+        $this->userRepository->updateFromRequest($request, $user);
 
         return redirect()->route('users.index')->with('success', 'User updated successfully.');
     }
@@ -147,12 +88,8 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        $user->delete();
-        
-        // Don't clear cache here - the redirect will fetch fresh data
-        // The short cache TTL (20s) ensures data stays fresh enough
-        // The frontend will reload the table after deletion
-        
+        $this->userRepository->delete($user);
+
         return redirect()->route('users.index')->with('success', 'User deleted successfully.');
     }
 }
