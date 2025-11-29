@@ -2,12 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\CacheHelper;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Http\Resources\NotificationResource;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,11 +23,26 @@ class UserController extends Controller
     ) {
     }
 
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
-        $data = $this->userRepository->getIndexData($request);
-        
-        return Inertia::render('Dashboard', $data);
+        try {
+            $data = $this->userRepository->getIndexData($request);
+            
+            return Inertia::render('Dashboard', $data);
+        } catch (\Exception $e) {
+            Log::error('Failed to load dashboard', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Return error view instead of redirecting to avoid loops
+            return Inertia::render('Dashboard', [
+                'users' => ['data' => [], 'current_page' => 1, 'total' => 0],
+                'search' => $request->get('search', ''),
+                'notifications' => [],
+                'error' => 'Failed to load dashboard. Please refresh the page.',
+            ]);
+        }
     }
 
     /**
@@ -36,41 +56,81 @@ class UserController extends Controller
     /**
      * Store a newly created user in storage.
      */
-    public function store(StoreUserRequest $request)
+    public function store(StoreUserRequest $request): RedirectResponse
     {
-        $this->userRepository->createFromRequest($request);
+        try {
+            $user = $this->userRepository->createFromRequest($request);
 
-        return redirect()->route('users.index')->with('success', 'User created successfully.');
+            // Clear relevant caches
+            CacheHelper::flushTags(['users', 'user-search', 'index']);
+
+            return redirect()->route('users.index')->with('success', 'User created successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to create user', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->except(['password', 'password_confirmation']),
+            ]);
+
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to create user. Please try again.']);
+        }
     }
 
     /**
      * Display the specified user.
      */
-    public function show(User $user): JsonResponse|Response
+    public function show(User $user): JsonResponse|Response|RedirectResponse
     {
-        $user->load('address');
-        
-        if ((request()->wantsJson() || request()->ajax()) && !request()->header('X-Inertia')) {
-            return response()->json([
-                'user' => $user,
+        try {
+            $user->load('address');
+            
+            if ((request()->wantsJson() || request()->ajax()) && !request()->header('X-Inertia')) {
+                return response()->json([
+                    'user' => new UserResource($user),
+                ]);
+            }
+            
+            return Inertia::render('Users/Show', [
+                'user' => new UserResource($user),
             ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to show user', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json(['error' => 'Failed to load user.'], 500);
+            }
+
+            return redirect()->route('users.index')
+                ->with('error', 'Failed to load user details.');
         }
-        
-        return Inertia::render('Users/Show', [
-            'user' => $user,
-        ]);
     }
 
     /**
      * Show the form for editing the specified user.
      */
-    public function edit(User $user): Response
+    public function edit(User $user): Response|RedirectResponse
     {
-        $user->load('address');
-        
-        return Inertia::render('Users/Edit', [
-            'user' => $user,
-        ]);
+        try {
+            $user->load('address');
+            
+            return Inertia::render('Users/Edit', [
+                'user' => new UserResource($user),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to load edit form', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('users.index')
+                ->with('error', 'Failed to load edit form.');
+        }
     }
 
     /**
@@ -78,9 +138,25 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, User $user)
     {
-        $this->userRepository->updateFromRequest($request, $user);
+        try {
+            $this->userRepository->updateFromRequest($request, $user);
 
-        return redirect()->route('users.index')->with('success', 'User updated successfully.');
+            // Clear relevant caches
+            CacheHelper::flushTags(['users', 'user-search', 'index', "notifications.user.{$user->id}"]);
+
+            return redirect()->route('users.index')->with('success', 'User updated successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to update user', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->except(['password', 'password_confirmation']),
+            ]);
+
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to update user. Please try again.']);
+        }
     }
 
     /**
@@ -88,8 +164,23 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        $this->userRepository->delete($user);
+        try {
+            $userId = $user->id;
+            $this->userRepository->delete($user);
 
-        return redirect()->route('users.index')->with('success', 'User deleted successfully.');
+            // Clear relevant caches
+            CacheHelper::flushTags(['users', 'user-search', 'index', "notifications.user.{$userId}"]);
+
+            return redirect()->route('users.index')->with('success', 'User deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to delete user', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->back()
+                ->withErrors(['error' => 'Failed to delete user. Please try again.']);
+        }
     }
 }

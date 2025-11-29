@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Query Logging
+    |--------------------------------------------------------------------------
+    |
+    | Enable database query logging in development environments.
+    | This will log all database queries to the log file.
+    |
+    */
+
+    'log_queries' => env('APP_LOG_QUERIES', true),
+
 ];

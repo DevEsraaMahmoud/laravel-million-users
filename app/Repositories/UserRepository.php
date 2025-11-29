@@ -3,13 +3,16 @@
 namespace App\Repositories;
 
 use App\Events\UserUpdated;
+use App\Helpers\CacheHelper;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\Notification;
 use App\Models\User;
 use App\Services\UserSearchService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class UserRepository
 {
@@ -104,23 +107,68 @@ class UserRepository
      */
     public function getIndexData(Request $request): array
     {
-        $query = (string) $request->get('search', '');
-        $perPage = max(10, min((int) $request->get('per_page', 10), 20));
-        $page = (int) $request->get('page', 1);
+        try {
+            $query = (string) $request->get('search', '');
+            $perPage = max(10, min((int) $request->get('per_page', 10), 20));
+            $page = (int) $request->get('page', 1);
 
-        $users = $this->userSearchService->paginated($query, $perPage, $page);
-        
-        $notifications = Notification::select('id','user_id','type','message','read','created_at')
-            ->where('read', false)
-            ->orderByDesc('created_at')
-            ->limit(6)
-            ->get();
+            // Cache key includes all parameters
+            $cacheKey = 'index_data:' . md5($query . '|' . $perPage . '|' . $page);
 
-        return [
-            'users' => $users->withQueryString(),
-            'search' => $query,
-            'notifications' => $notifications,
-        ];
+            return CacheHelper::rememberWithTags(
+                ['index', 'users', 'notifications'],
+                $cacheKey,
+                60,
+                function () use ($query, $perPage, $page) {
+                    $users = $this->userSearchService->paginated($query, $perPage, $page);
+                    
+                    $notifications = $this->getCachedNotifications();
+
+                    return [
+                        'users' => $users->withQueryString(),
+                        'search' => $query,
+                        'notifications' => $notifications,
+                    ];
+                }
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to get index data', [
+                'query' => $query ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Fallback to non-cached data
+            $users = $this->userSearchService->paginated($query ?? '', $perPage ?? 20, $page ?? 1);
+            $notifications = $this->getCachedNotifications();
+
+            return [
+                'users' => $users->withQueryString(),
+                'search' => $query ?? '',
+                'notifications' => $notifications,
+            ];
+        }
+    }
+
+    /**
+     * Get cached unread notifications.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    private function getCachedNotifications()
+    {
+        return CacheHelper::rememberWithTags(
+            ['notifications'],
+            'unread_notifications:limit_6',
+            30,
+            function () {
+                return Notification::select('id', 'user_id', 'type', 'message', 'read', 'created_at')
+                    ->where('read', false)
+                    ->orderByDesc('created_at')
+                    ->limit(6)
+                    ->get();
+            }
+        );
     }
 
     /**
