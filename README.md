@@ -1,4 +1,4 @@
-# Laravel Assessment – Advanced Level (Nina.care)
+# Laravel Assessment – Advanced Level (users.care)
 
 ![Dashboard](screenshots/1.png)
 
@@ -83,8 +83,8 @@ A comprehensive Laravel application built with Inertia.js and Vue.js for managin
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/DevEsraaMahmoud/nina-assessment.git
-cd nina-assessment
+git clone https://github.com/DevEsraaMahmoud/users-assessment.git
+cd users-assessment
 ```
 
 ### 2. Install PHP dependencies
@@ -114,7 +114,7 @@ The project uses SQLite by default (no configuration needed). For MySQL, edit `.
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=nina-assessment
+DB_DATABASE=users-assessment
 DB_USERNAME=your_username
 DB_PASSWORD=your_password
 ```
@@ -215,13 +215,13 @@ Visit `http://localhost:8000` in your browser.
 DB_CONNECTION=mysql  # or sqlite
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=nina-assessment
+DB_DATABASE=users-assessment
 DB_USERNAME=your_username
 DB_PASSWORD=your_password
 
 # Cache
 CACHE_STORE=database  # or redis, memcached, file, array
-CACHE_PREFIX=nina-cache-
+CACHE_PREFIX=users-cache-
 
 # Queue
 QUEUE_CONNECTION=database  # or redis, sqs, etc.
